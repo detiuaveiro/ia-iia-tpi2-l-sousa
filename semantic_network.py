@@ -55,8 +55,6 @@ class Declaration:
 class SemanticNetwork:
     def __init__(self):
         self.declarations = []
-        self.opposite = {}
-        self.inverse = {}
     def __str__(self):
         return str(self.declarations)
     def insert(self,user,relation):
