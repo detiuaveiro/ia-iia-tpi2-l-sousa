@@ -227,15 +227,14 @@ constraints += [ (edge,lambda auxvar,auxval,var,val : val==auxval[5])
 cs = MyCS(domains,dict(constraints))
 
 import time
-t0 = time.clock()
+t0 = time.perf_counter() #clock()
 lsols = cs.search_all()
 
 print("TWO+TWO=FOUR all solutions:")
 for s in lsols:
     print([(v,s[v]) for v in ['F','O','R','T','U','W']])
 
-print("Time:",time.clock()-t0)
+print("Time:",time.perf_counter()-t0) # clock()-t0)
 
 print(len(lsols)," solutions")
-
 
