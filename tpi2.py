@@ -53,8 +53,7 @@ class MySemNet(SemanticNetwork):
         is_member = lambda x: isinstance(x.relation, Member)
         is_assoc = lambda x: isinstance(x.relation, Association)
         is_subtype = lambda x: isinstance(x.relation, Subtype)
-        member_or_sybtype = lambda x : is_member(x) or is_subtype(x)
-        
+        member_or_subtype = lambda x : is_member(x) or is_subtype(x)
         
         for inv in self.declarations:
             # se a assoc é uma associação inversa
@@ -66,7 +65,7 @@ class MySemNet(SemanticNetwork):
                 # Procura os pais 
                 parents = [
                     decl.relation.entity1 for decl in self.declarations
-                    if member_or_sybtype(decl)
+                    if member_or_subtype(decl)
                     and decl.relation.entity2 == entity]
                 # chama resursivamente para os parents por causa da herança
                 recursive = []
@@ -83,7 +82,7 @@ class MySemNet(SemanticNetwork):
         # também calcula os pais
         parents = [decl.relation.entity2
                    for decl in self.declarations
-                   if member_or_sybtype(decl)
+                   if member_or_subtype(decl)
                    and decl.relation.entity1 == entity]
         recursive = []
         # chama recursivamente para os pais da entity
@@ -98,12 +97,12 @@ class MySemNet(SemanticNetwork):
         is_member = lambda x: isinstance(x.relation, Member)
         is_assoc = lambda x: isinstance(x.relation, Association)
         is_subtype = lambda x: isinstance(x.relation, Subtype)
-        member_or_sybtype = lambda x : is_member(x) or is_subtype(x)
+        member_or_subtype = lambda x : is_member(x) or is_subtype(x)
         
         def filter_parents(query_local, parents):
             # Filtrar os parents
             for l in query_local:
-                if is_assoc(l) and l.relation.cardinality == 'single' or member_or_sybtype(l):
+                if is_assoc(l) and l.relation.cardinality == 'single' or member_or_subtype(l):
                     parents = [
                         parent for parent in parents if parent.relation.name != l.relation.name]
             return parents
@@ -125,12 +124,11 @@ class MySemNet(SemanticNetwork):
             counter = Counter(assoc_properties).most_common(1)
             return counter
 
-        
         # assocciações locais
         query_local = [decl for decl in self.query_local(e1=entity, relname=relname)]
 
         # parents da entidade 
-        parents = [decl for decl in self.declarations if member_or_sybtype(decl) and decl.relation.entity1 == entity]
+        parents = [decl for decl in self.declarations if member_or_subtype(decl) and decl.relation.entity1 == entity]
 
         # filtrar os parents (cancelamento da herança) - basicamente cancela a herança para os parents que sejam single ou sejam membro ou subtipo
         parents = filter_parents(query_local, parents)
@@ -141,13 +139,14 @@ class MySemNet(SemanticNetwork):
         # single mais comum
         most_common_properties = most_common_properties()
     
-        return list(set(rels + [l.relation.entity2 for l in query_local if is_assoc(l) and l.relation.cardinality != 'single' and l.relation.assoc_properties() == most_common_properties[0][0] or member_or_sybtype(l)])) if len(most_common_properties) > 0 else list(set(rels + [l.relation.entity2 for l in query_local if is_assoc(l) and l.relation.cardinality != 'single' or member_or_sybtype(l)]))
+        return list(set(rels + [l.relation.entity2 for l in query_local if is_assoc(l) and l.relation.cardinality != 'single' and l.relation.assoc_properties() == most_common_properties[0][0] or member_or_subtype(l)])) if len(most_common_properties) > 0 else list(set(rels + [l.relation.entity2 for l in query_local if is_assoc(l) and l.relation.cardinality != 'single' or member_or_subtype(l)]))
 
 
 class MyCS(ConstraintSearch):
 
     def search_all(self, domains=None, xpto=None):
-        """Código adaptado do search do constraintseach.py """
+        """Código adaptado do search do constraintseach.py 
+        em vez de retornar as solutions retorna um set de solutions"""
         # Pode usar o argumento 'xpto' para passar mais
         # informação, caso precise
         #
