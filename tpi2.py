@@ -3,6 +3,8 @@
 from semantic_network import *
 from bayes_net import *
 from constraintsearch import *
+from collections import OrderedDict
+from functools import reduce
 
 
 class MyBN(BayesNet):
@@ -33,31 +35,16 @@ class MySemNet(SemanticNetwork):
         SemanticNetwork.__init__(self)
 
     def translate_ontology(self):
-        subtypes = [d.relation for d in self.declarations if isinstance(
-            d.relation, Subtype)]
-        subtypes_dict = {}
+        subs = {}
+        for d in self.declarations:
+            if isinstance(d.relation, Subtype):
+                if d.relation.entity2 not in subs:
+                    subs[d.relation.entity2] = set()
+                subs[d.relation.entity2].add(d.relation.entity1)
 
-        for subtype in subtypes:
-            if subtype.entity2 not in subtypes_dict:
-                subtypes_dict[subtype.entity2] = set()
-
-            subtypes_dict[subtype.entity2].add(subtype.entity1)
-
-        res = []
-        for subtype_e2 in subtypes_dict:
-            subtypes_e1 = ''
-            for subtype_e1 in subtypes_dict[subtype_e2]:
-                subtype_e1 = subtype_e1[0].upper() + subtype_e1[1:]
-                subtypes_e1 += f'{subtype_e1}(x) or '
-            subtypes_e1 = subtypes_e1[:-4]
-            subtype_e2 = subtype_e2[0].upper() + subtype_e2[1:]
-            temp_str = f'Qx {subtypes_e1} => {subtype_e2}(x)'
-            res.append(temp_str)
-
-        return res
+        return [f'Qx {"".join(map(lambda x: f"{x.capitalize()}(x) or ",sorted(vals)))[:-4]} => {key.capitalize()}(x)' for key, vals in OrderedDict(sorted(subs.items())).items()]
 
     def query_inherit(self, entity, assoc):
-        def query_inherit(self, entity, assoc):
         is_inv = [d for d in self.declarations if isinstance(
             d.relation, Association) if d.relation.entity2 == entity]
         if is_inv:
